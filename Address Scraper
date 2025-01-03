@@ -1,0 +1,49 @@
+from selenium import webdriver 
+from selenium.webdriver.common.action_chains import ActionChains 
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.relative_locator import locate_with
+import pandas as pd
+import numpy as np
+
+from selenium.webdriver.common.keys import Keys
+
+driver = webdriver.Chrome()
+#open the url in browser
+driver.get('https://tax.co.hays.tx.us/')
+
+#click on input field
+driver.find_element(By.ID,"SearchText").click()
+driver.implicitly_wait(5)
+
+#type street in input field
+driver.find_element(By.ID,"SearchText").send_keys('saltillo st')
+driver.implicitly_wait(5)
+
+#press Enter key
+driver.switch_to.active_element.send_keys(Keys.ENTER)
+driver.implicitly_wait(5)
+
+#fetch the text of element
+table_XPath = '//div[@id="grid"]//tbody/' #whole table
+num_rows = len(driver.find_elements(by='xpath', value=table_XPath + 'tr')) + 1
+num_cols = len(driver.find_elements(by='xpath', value=table_XPath + 'tr[1]/td'))
+#num_pages= driver.find_element(By.XPATH,value='//*[@id="grid"]/div[4]/span[1]/text()[2]').text #testing how to get value of total num of pages
+#num_pages=WebDriverWait(driver, 30).until(EC.visibility_of_element_located((By.XPATH, "//*[@id="grid"]/div[4]/span[1]/text()[2]"))).get_attribute("innerHTML").splitlines()[1] #testing how to get value of total num of pages
+xpath = '//*[@id="grid"]/div[4]/span[1]/text()[2]' #next page button
+
+table = []
+for x in range(20):
+    for row in range(1,num_rows):
+        text = driver.find_element(By.XPATH,value=f'{table_XPath}tr[{row}]/td[6]').text
+        table.append(text)
+    
+    try:
+        driver.find_element(By.XPATH,get_xpath(driver,'//*[@id="grid"]/div[4]/a[3]/span')).click() #try to click next page button
+    except:
+        break #end loop when there's no more pages
+    x=x+1
+df = pd.DataFrame(table)
+#df.head()
+print(df)
